@@ -1195,6 +1195,44 @@ function copyById(id) {
 
 // ===== TRANSLATION =====
 const LANG_NAMES = { en: 'Engels', de: 'Duits', fr: 'Frans', ar: 'Arabisch' };
+function isEnglish(text) {
+  return /^[\x00-\x7F]*$/.test(text); // simpele check
+}
+async function autoTranslatePrompt(promptText) {
+  const apiKey = getApiKey();
+  if (!apiKey) return promptText;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{
+          role: 'user',
+          content: "Vertaal deze prompt naar Nederlands. Behoud structuur en variabelen:\n\n" + promptText
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('API fout');
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || promptText;
+
+  } catch (e) {
+    console.error('Vertaalfout:', e);
+    return promptText;
+  }
+} 
 
 function setTargetLang(lang, btn) {
   targetLang = lang;
