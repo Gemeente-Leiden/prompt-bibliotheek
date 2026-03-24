@@ -268,14 +268,28 @@
   }
 .prompt-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   width: 100%;
 }
+/* Tablet */
+@media (max-width: 1200px) {
+  .prompt-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .prompt-grid {
+    grid-template-columns: 1fr;
+  }
+} 
 
   /* PROMPT CARD */
   .prompt-card {
-    background: var(--bg-white);
+   width: 100%; 
+   background: var(--bg-white);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1.4rem;
