@@ -966,9 +966,39 @@ let translationCount = 0;
 let editMode = false;
 
 // ===== INIT =====
-function init() {
+async function loadExternalPrompts() {
+  try {
+    const res = await fetch('https://gemeente-leiden.github.io/prompt-bibliotheek/data/prompts-chat.json');
+    const data = await res.json();
+
+    // Zorg dat IDs niet botsen
+    const maxId = Math.max(0, ...prompts.map(p => p.id));
+
+    const mapped = data.map((p, i) => ({
+      id: maxId + i + 1,
+      featured: false,
+      title: p.title || "Untitled prompt",
+      category: mapCategory(p),
+      model: "ChatGPT",
+      author: "prompts.chat",
+      date: new Date().toISOString().substring(0, 10),
+      usage: "Extern ingeladen prompt",
+      prompt: p.prompt
+    }));
+
+    prompts = [...prompts, ...mapped];
+
+  } catch (e) {
+    console.error('Fout bij laden externe prompts', e);
+  }
+}
+ 
+async function init() {
   loadData();
   loadSettings();
+
+  await loadExternalPrompts(); // 👈 NIEUW
+
   renderPrompts();
   updateStats();
 }
@@ -1037,6 +1067,16 @@ const CAT_LABELS = {
   risico: 'Risicoanalyses', beleid: 'Beleidsnotities'
 };
 
+function mapCategory(p) {
+  if (!p.tags) return 'documentatie';
+
+  if (p.tags.includes('dev')) return 'code';
+  if (p.tags.includes('writing')) return 'communicatie';
+  if (p.tags.includes('analysis')) return 'risico';
+
+  return 'documentatie';
+}
+ 
 function renderPrompts() {
   const q = document.getElementById('search-input').value.toLowerCase();
   const filtered = prompts.filter(p => {
