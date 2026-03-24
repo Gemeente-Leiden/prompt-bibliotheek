@@ -1,1 +1,17 @@
-data/prompts-chat.json
+[
+  {
+    "title": "Act as a Linux terminal",
+    "prompt": "I want you to act as a linux terminal. I will type commands and you will reply with what the terminal should show.",
+    "tags": ["dev"]
+  },
+  {
+    "title": "English translator",
+    "prompt": "I want you to act as an English translator, spelling corrector and improver.",
+    "tags": ["writing"]
+  },
+  {
+    "title": "Explain code",
+    "prompt": "Explain the following code step by step in simple terms.",
+    "tags": ["dev"]
+  }
+]
