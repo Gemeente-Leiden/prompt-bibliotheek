@@ -268,8 +268,8 @@
   }
 .prompt-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
   width: 100%;
 }
 
@@ -278,11 +278,11 @@
     background: var(--bg-white);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 1.25rem;
+    padding: 1.4rem;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     transition: box-shadow 0.15s, border-color 0.15s;
     position: relative;
     overflow: hidden;
@@ -291,9 +291,10 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     border-color: #C8D0E4;
   }
-  .prompt-card.featured {
-    border-left: 3px solid var(--oranje);
-  }
+.prompt-card.featured {
+  border-left: 4px solid var(--oranje);
+  background: #FFF9F3;
+}
   .card-top {
     display: flex;
     align-items: flex-start;
@@ -1121,7 +1122,11 @@ function renderPrompts() {
     empty.style.display = 'block';
   } else {
     empty.style.display = 'none';
-    grid.innerHTML = filtered.map(p => renderCard(p)).join('');
+    const sorted = filtered.sort((a, b) => {
+  return (b.featured === true) - (a.featured === true);
+});
+
+grid.innerHTML = sorted.map(p => renderCard(p)).join('');
   }
 
   document.getElementById('result-count').textContent = filtered.length + ' prompt' + (filtered.length !== 1 ? 's' : '');
@@ -1150,7 +1155,7 @@ function renderCard(p) {
       '<span class="tag tag-cat" style="background:' + color + '15;color:' + color + ';border-color:' + color + '40;">' + label + '</span>' +
       '<span class="tag tag-model">' + p.model + '</span>' +
       (p.featured ? '<span class="tag tag-new">Uitgelicht</span>' : '') +
-      (p.author === 'prompts.chat' ? '<span class="tag">Extern</span>' : '') 
+      (p.author === 'prompts.chat' ? '<span class="tag">Extern</span>' : '')
     '</div>' +
     '<div class="card-footer">' +
       '<div class="card-author">' +
