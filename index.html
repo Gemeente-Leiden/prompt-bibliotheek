@@ -1057,6 +1057,31 @@ function getApiKey() {
 }
 
 // ===== RENDER =====
+async function loadExternalPrompts() {
+  try {
+    const res = await fetch('https://gemeente-leiden.github.io/prompt-bibliotheek/data/prompts-chat.json');
+    const data = await res.json();
+
+    const maxId = Math.max(0, ...prompts.map(p => p.id));
+
+    const mapped = data.map((p, i) => ({
+      id: maxId + i + 1,
+      featured: false,
+      title: p.title || "Untitled",
+      category: mapCategory(p),
+      model: "ChatGPT",
+      author: "prompts.chat",
+      date: new Date().toISOString().substring(0, 10),
+      usage: "Extern ingeladen prompt",
+      prompt: p.prompt
+    }));
+
+    prompts = [...prompts, ...mapped];
+
+  } catch (e) {
+    console.error('Fout bij laden externe prompts', e);
+  }
+} 
 const CAT_COLORS = {
   documentatie: '#1A6B3C', code: '#7C3AED', communicatie: '#0369A1',
   vergadering: '#B45309', risico: '#B91C1C', beleid: '#0F766E'
@@ -1196,8 +1221,9 @@ function copyById(id) {
 // ===== TRANSLATION =====
 const LANG_NAMES = { en: 'Engels', de: 'Duits', fr: 'Frans', ar: 'Arabisch' };
 function isEnglish(text) {
-  return /^[\x00-\x7F]*$/.test(text); // simpele check
+  return /^[\x00-\x7F]*$/.test(text);
 }
+
 async function autoTranslatePrompt(promptText) {
   const apiKey = getApiKey();
   if (!apiKey) return promptText;
@@ -1216,24 +1242,18 @@ async function autoTranslatePrompt(promptText) {
         max_tokens: 1200,
         messages: [{
           role: 'user',
-          content: "Vertaal deze prompt naar Nederlands. Behoud structuur en variabelen:\n\n" + promptText
+          content: "Vertaal naar Nederlands:\n\n" + promptText
         }]
       })
     });
 
-    if (!response.ok) {
-      throw new Error('API fout');
-    }
-
     const data = await response.json();
     return data.content?.[0]?.text || promptText;
 
-  } catch (e) {
-    console.error('Vertaalfout:', e);
+  } catch {
     return promptText;
   }
-} 
-
+}
 function setTargetLang(lang, btn) {
   targetLang = lang;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
