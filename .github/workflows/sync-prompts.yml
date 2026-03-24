@@ -1,0 +1,54 @@
+name: Sync prompts.chat
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # elke dag 06:00
+  workflow_dispatch:       # handmatig starten
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout eigen repo
+        uses: actions/checkout@v4
+
+      - name: Clone prompts.chat
+        run: |
+          git clone https://github.com/f/prompts.chat.git external
+
+      - name: Extract prompts naar JSON
+        run: |
+          python3 <<EOF
+import json
+import os
+
+prompts = []
+
+# SIMPELE extractie (pas later uit te breiden)
+for root, dirs, files in os.walk("external"):
+    for file in files:
+        if file.endswith(".md") or file.endswith(".txt"):
+            try:
+                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
+                    text = f.read()
+                    if len(text) > 50:
+                        prompts.append({
+                            "title": file.replace(".md",""),
+                            "prompt": text,
+                            "tags": ["external"]
+                        })
+            except:
+                pass
+
+with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
+    json.dump(prompts[:50], f, indent=2, ensure_ascii=False)
+EOF
+
+      - name: Commit wijzigingen
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/prompts-chat.json
+          git commit -m "Auto sync prompts" || echo "No changes"
+          git push
