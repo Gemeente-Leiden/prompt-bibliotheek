@@ -1123,6 +1123,7 @@ function renderCard(p) {
       '<span class="tag tag-cat" style="background:' + color + '15;color:' + color + ';border-color:' + color + '40;">' + label + '</span>' +
       '<span class="tag tag-model">' + p.model + '</span>' +
       (p.featured ? '<span class="tag tag-new">Uitgelicht</span>' : '') +
+      (p.author === 'prompts.chat' ? '<span class="tag">Extern</span>' : '') 
     '</div>' +
     '<div class="card-footer">' +
       '<div class="card-author">' +
