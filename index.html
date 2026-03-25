@@ -1120,31 +1120,32 @@ function mapCategory(p) {
 }
  
 function renderPrompts() {
-  const q = document.getElementById('search-input').value.toLowerCase();
+  const grid = document.getElementById('prompt-grid');
+
+  // Filteren (zoals je al had)
   const filtered = prompts.filter(p => {
-    const matchCat = currentFilter.category === 'alle' || p.category === currentFilter.category;
-    const matchModel = currentFilter.model === 'alle-modellen' || p.model === currentFilter.model || p.model === 'Beide';
-    const matchQ = !q || p.title.toLowerCase().includes(q) || p.prompt.toLowerCase().includes(q) || (CAT_LABELS[p.category]||'').toLowerCase().includes(q);
-    return matchCat && matchModel && matchQ;
+    if (currentCategory !== 'all' && p.category !== currentCategory) return false;
+    if (currentModel !== 'all' && p.model !== currentModel && p.model !== 'Beide') return false;
+    if (searchTerm && !(
+      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.prompt.toLowerCase().includes(searchTerm.toLowerCase())
+    )) return false;
+    return true;
   });
 
-  const grid = document.getElementById('prompt-grid');
-  const empty = document.getElementById('empty-state');
+  // Sorteren (featured bovenaan)
+  const sorted = filtered.sort((a, b) => {
+    return (b.featured === true) - (a.featured === true);
+  });
 
-  if (filtered.length === 0) {
-    grid.innerHTML = '';
-    empty.style.display = 'block';
-  } else {
-    empty.style.display = 'none';
-    const sorted = filtered.sort((a, b) => {
-  return (b.featured === true) - (a.featured === true);
-});
+  // 🚨 BELANGRIJK: GEEN WRAPPER!
+  grid.innerHTML = sorted.map(p => renderCard(p)).join('');
 
-grid.innerHTML = sorted.map(p => renderCard(p)).join('');
+  // Update teller rechtsboven
+  const countEl = document.getElementById('prompt-count');
+  if (countEl) {
+    countEl.textContent = `${sorted.length} prompts`;
   }
-
-  document.getElementById('result-count').textContent = filtered.length + ' prompt' + (filtered.length !== 1 ? 's' : '');
-  updateCounts();
 }
 
 function renderCard(p) {
