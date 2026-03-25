@@ -17,9 +17,9 @@ jobs:
         run: |
           git clone https://github.com/f/prompts.chat.git external
 
-      - name: Extract prompts naar JSON
-        run: |
-          python3 <<EOF
+ - name: Extract prompts naar JSON
+  run: |
+    python3 - <<EOF
 import json
 import os
 
@@ -39,7 +39,7 @@ for root, dirs, files in os.walk("external"):
                 with open(path, "r", encoding="utf-8") as f:
                     text = f.read()
 
-                    if len(text) > 100 and "prompt" in text.lower():
+                    if len(text) > 100:
                         prompts.append({
                             "title": extract_title(text, file),
                             "prompt": text,
@@ -48,6 +48,8 @@ for root, dirs, files in os.walk("external"):
 
             except Exception as e:
                 print(f"Error reading {file}: {e}")
+
+os.makedirs("data", exist_ok=True)
 
 with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
     json.dump(prompts, f, indent=2, ensure_ascii=False)
