@@ -1018,6 +1018,7 @@ async function init() {
 
   renderPrompts();
   updateStats();
+  updateCounts();
 }
 
 // localStorage wrapper — veilig voor SharePoint iframe-sandbox
@@ -1122,10 +1123,11 @@ function mapCategory(p) {
 function renderPrompts() {
   const grid = document.getElementById('prompt-grid');
 
-  // Filteren (zoals je al had)
+  // Filteren
+  const searchTerm = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
   const filtered = prompts.filter(p => {
-    if (currentCategory !== 'all' && p.category !== currentCategory) return false;
-    if (currentModel !== 'all' && p.model !== currentModel && p.model !== 'Beide') return false;
+    if (currentFilter.category !== 'alle' && p.category !== currentFilter.category) return false;
+    if (currentFilter.model !== 'alle-modellen' && p.model !== currentFilter.model && p.model !== 'Beide') return false;
     if (searchTerm && !(
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.prompt.toLowerCase().includes(searchTerm.toLowerCase())
@@ -1142,7 +1144,7 @@ function renderPrompts() {
   grid.innerHTML = sorted.map(p => renderCard(p)).join('');
 
   // Update teller rechtsboven
-  const countEl = document.getElementById('prompt-count');
+  const countEl = document.getElementById('result-count');
   if (countEl) {
     countEl.textContent = `${sorted.length} prompts`;
   }
@@ -1170,7 +1172,7 @@ function renderCard(p) {
       '<span class="tag tag-cat" style="background:' + color + '15;color:' + color + ';border-color:' + color + '40;">' + label + '</span>' +
       '<span class="tag tag-model">' + p.model + '</span>' +
 (p.featured ? '<span class="tag tag-new">Uitgelicht</span>' : '') +
-(p.author === 'prompts.chat' ? '<span class="tag">Extern</span>' : '') 
+(p.author === 'prompts.chat' ? '<span class="tag">Extern</span>' : '') +
 '</div>' +
     '<div class="card-footer">' +
       '<div class="card-author">' +
@@ -1419,6 +1421,7 @@ function savePrompt() {
   closeModal('new-modal');
   renderPrompts();
   updateStats();
+  updateCounts();
 }
 
 // ===== EXPORT / IMPORT =====
@@ -1445,6 +1448,7 @@ function importPrompts(event) {
         saveData();
         renderPrompts();
         updateStats();
+        updateCounts();
         showToast(imported.length + ' prompts geïmporteerd!', 'success');
       }
     } catch {
