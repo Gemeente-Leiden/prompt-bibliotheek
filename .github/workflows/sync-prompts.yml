@@ -1,8 +1,6 @@
 name: Sync prompts.chat
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,25 +8,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout eigen repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Clone prompts.chat
         run: git clone https://github.com/f/prompts.chat.git external
 
-      - name: Create Python script
+      - name: Create script
         run: |
           cat > script.py << 'EOF'
 import json
 import os
 
 prompts = []
-
-def extract_title(text, filename):
-    for line in text.split("\n"):
-        if line.startswith("# "):
-            return line.replace("# ", "").strip()
-    return filename.replace(".md", "")
 
 for root, dirs, files in os.walk("external"):
     for file in files:
@@ -37,30 +29,27 @@ for root, dirs, files in os.walk("external"):
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     text = f.read()
-
                     if len(text) > 100:
                         prompts.append({
-                            "title": extract_title(text, file),
-                            "prompt": text,
-                            "tags": ["external"]
+                            "title": file,
+                            "prompt": text
                         })
-
             except Exception as e:
-                print(f"Error reading {file}: {e}")
+                print(e)
 
 os.makedirs("data", exist_ok=True)
 
 with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
-    json.dump(prompts, f, indent=2, ensure_ascii=False)
+    json.dump(prompts, f)
 EOF
 
       - name: Run script
         run: python3 script.py
 
-      - name: Commit wijzigingen
+      - name: Commit
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add data/prompts-chat.json
-          git commit -m "Auto sync prompts" || echo "No changes"
+          git commit -m "update prompts" || echo "no changes"
           git push
