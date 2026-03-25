@@ -25,24 +25,32 @@ import os
 
 prompts = []
 
-# SIMPELE extractie (pas later uit te breiden)
+def extract_title(text, filename):
+    for line in text.split("\n"):
+        if line.startswith("# "):
+            return line.replace("# ", "").strip()
+    return filename.replace(".md", "")
+
 for root, dirs, files in os.walk("external"):
     for file in files:
-        if file.endswith(".md") or file.endswith(".txt"):
+        if file.endswith(".md"):
+            path = os.path.join(root, file)
             try:
-                with open(os.path.join(root, file), "r", encoding="utf-8") as f:
+                with open(path, "r", encoding="utf-8") as f:
                     text = f.read()
-                    if len(text) > 50:
+
+                    if len(text) > 100 and "prompt" in text.lower():
                         prompts.append({
-                            "title": file.replace(".md",""),
+                            "title": extract_title(text, file),
                             "prompt": text,
                             "tags": ["external"]
                         })
-            except:
-                pass
+
+            except Exception as e:
+                print(f"Error reading {file}: {e}")
 
 with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
-    json.dump(prompts[:50], f, indent=2, ensure_ascii=False)
+    json.dump(prompts, f, indent=2, ensure_ascii=False)
 EOF
 
       - name: Commit wijzigingen
