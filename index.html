@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<!--
+  =============================================================================
+  MEREL — Promptbibliotheek
+  Gemeente Leiden · IT & Digitalisering · Intern gebruik
+  =============================================================================
+
+  Bestand:  index.html
+  Doel:     Structuur (HTML) van de promptbibliotheek applicatie.
+
+  Externe bestanden:
+    style.css — alle visuele stijlen
+    app.js    — alle applicatielogica en data
+
+  Structuur van de pagina:
+    1. <head>       — meta, lettertypes, stylesheet
+    2. <header>     — sticky navigatiebalk met logo en actieknoppen
+    3. .layout      — twee-koloms grid (sidebar + main)
+       3a. <aside>  — sidebar met categorie- en modelfilters
+       3b. <main>   — statistieken, zoekbalk, promptgrid
+    4. Modals       — detail, nieuw/bewerken, instellingen
+    5. Toast        — tijdelijke notificaties
+    6. <script>     — laadt app.js (staat onderaan zodat de DOM gereed is)
+  =============================================================================
+-->
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MEREL - Promptbibliotheek</title>
+
+  <!-- Google Fonts: IBM Plex Sans (UI) en IBM Plex Mono (prompttekst) -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Alle stijlen staan in een apart bestand voor overzichtelijkheid -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     Sticky balk bovenaan met logo, paginatitel en twee knoppen:
+     "Instellingen" en "Nieuwe prompt".
+     ============================================================ -->
+<header class="header">
+  <div class="header-logo">
+    <!-- Logo: gemeenteicoon ingeladen via SharePoint -->
+    <div class="logo-badge" style="background:none;padding:0;overflow:hidden;">
+      <img src="https://servicepunt71.sharepoint.com/sites/msteams_d9e79a/_api/siteiconmanager/getsitelogo?type=%271%27&hash=639079792948566922"
+           alt="Gemeente icoon"
+           style="width:32px;height:32px;object-fit:cover;border-radius:6px;">
+    </div>
+    <div>
+      <div class="header-title">MEREL — Promptbibliotheek</div>
+      <div class="header-subtitle">IT &amp; Digitalisering · Intern gebruik</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn-header" onclick="openSettings()">⚙ Instellingen</button>
+    <button class="btn-header" style="background:rgba(225,112,0,0.25);border-color:rgba(225,112,0,0.4);" onclick="openNewModal()">+ Nieuwe prompt</button>
+  </div>
+</header>
+
+<!-- ============================================================
+     HOOFDLAYOUT
+     Twee kolommen: vaste sidebar (240px) + flexibele main.
+     ============================================================ -->
+<div class="layout">
+
+  <!-- ============================================================
+       SIDEBAR
+       Bevat drie secties:
+       - Overzicht (alle prompts)
+       - Categorieën (filteren op type)
+       - Filter op model (ChatGPT / Claude / Beide)
+       Actieve staat wordt beheerd via JS (filterCategory / filterModel).
+       ============================================================ -->
+  <aside class="sidebar">
+
+    <!-- Sectie: overzicht -->
+    <div class="sidebar-section">
+      <span class="sidebar-label">Overzicht</span>
+      <button class="sidebar-item active" onclick="filterCategory('alle', this)">
+        <span class="sidebar-dot" style="background:#003082"></span>
+        Alle prompts
+        <span class="count-badge" id="count-alle">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Sectie: categoriefilters -->
+    <div class="sidebar-section">
+      <span class="sidebar-label">Categorieën</span>
+      <button class="sidebar-item" onclick="filterCategory('documentatie', this)">
+        <span class="sidebar-dot" style="background:#1A6B3C"></span>
+        Technische documentatie
+        <span class="count-badge" id="count-documentatie">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCategory('code', this)">
+        <span class="sidebar-dot" style="background:#7C3AED"></span>
+        Code review
+        <span class="count-badge" id="count-code">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCategory('communicatie', this)">
+        <span class="sidebar-dot" style="background:#0369A1"></span>
+        Projectcommunicatie
+        <span class="count-badge" id="count-communicatie">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCategory('vergadering', this)">
+        <span class="sidebar-dot" style="background:#B45309"></span>
+        Vergaderverslagen
+        <span class="count-badge" id="count-vergadering">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCategory('risico', this)">
+        <span class="sidebar-dot" style="background:#B91C1C"></span>
+        Risicoanalyses
+        <span class="count-badge" id="count-risico">0</span>
+      </button>
+      <button class="sidebar-item" onclick="filterCategory('beleid', this)">
+        <span class="sidebar-dot" style="background:#0F766E"></span>
+        Beleidsnotities
+        <span class="count-badge" id="count-beleid">0</span>
+      </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Sectie: modelfilters -->
+    <div class="sidebar-section">
+      <span class="sidebar-label">Filter op model</span>
+      <button class="sidebar-item" onclick="filterModel('alle-modellen', this)">
+        <span class="sidebar-dot" style="background:#888"></span>
+        Alle modellen
+      </button>
+      <button class="sidebar-item" onclick="filterModel('ChatGPT', this)">
+        <span class="sidebar-dot" style="background:#10A37F"></span>
+        ChatGPT
+      </button>
+      <button class="sidebar-item" onclick="filterModel('Claude', this)">
+        <span class="sidebar-dot" style="background:#D97706"></span>
+        Claude
+      </button>
+      <button class="sidebar-item" onclick="filterModel('Beide', this)">
+        <span class="sidebar-dot" style="background:#6366F1"></span>
+        Beide modellen
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ============================================================
+       HOOFDINHOUD
+       Bevat: API-banner, statistieken, zoekbalk, promptgrid.
+       ============================================================ -->
+  <main class="main">
+
+    <!-- API-sleutelbanner: zichtbaar als er nog geen sleutel is ingesteld.
+         Wordt verborgen via loadSettings() in app.js zodra er een sleutel gevonden wordt. -->
+    <div class="api-banner" id="api-banner">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      Voor vertaling is een Claude API-sleutel nodig. Stel deze in via
+      <button style="background:none;border:none;color:var(--oranje);font-weight:500;cursor:pointer;font-size:13px;padding:0;" onclick="openSettings()">⚙ Instellingen</button>
+      <button class="api-banner-close" onclick="document.getElementById('api-banner').style.display='none'">×</button>
+    </div>
+
+    <!-- Statistiekenrij: vier kaartjes met live tellingen.
+         Waarden worden bijgewerkt via updateStats() en updateCounts() in app.js. -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Totaal prompts</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-sub">in bibliotheek</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Categorieën</div>
+        <div class="stat-value">6</div>
+        <div class="stat-sub">IT &amp; Digitalisering</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Modellen</div>
+        <div class="stat-value">2</div>
+        <div class="stat-sub">ChatGPT · Claude</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Vertalingen</div>
+        <div class="stat-value" id="stat-translations">0</div>
+        <div class="stat-sub">gemaakt via API</div>
+      </div>
+    </div>
+
+    <!-- Zoekbalk en actieknoppen.
+         Het zoekveld roept renderPrompts() aan bij elke toetsaanslag (oninput). -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input class="search-input"
+               type="text"
+               placeholder="Zoek op titel, trefwoord of categorie…"
+               id="search-input"
+               oninput="renderPrompts()">
+      </div>
+      <button class="btn btn-secondary" onclick="renderPrompts()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <line x1="4" y1="6" x2="20" y2="6"/>
+          <line x1="4" y1="12" x2="14" y2="12"/>
+          <line x1="4" y1="18" x2="10" y2="18"/>
+        </svg>
+        Filter
+      </button>
+      <button class="btn btn-oranje" onclick="openNewModal()">+ Toevoegen</button>
+    </div>
+
+    <!-- Promptgrid sectie.
+         De sectietitel wordt aangepast via filterCategory() in app.js.
+         Het grid (#prompt-grid) wordt gevuld via renderPrompts() in app.js.
+         De lege-toestand (#empty-state) is standaard verborgen. -->
+    <div class="section-header">
+      <div class="section-title" id="section-title">Alle prompts</div>
+      <div style="font-size:13px;color:var(--tekst-muted);" id="result-count"></div>
+    </div>
+    <div class="prompt-grid" id="prompt-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">Geen prompts gevonden</div>
+      <div>Pas je zoekterm aan of voeg een nieuwe prompt toe.</div>
+    </div>
+
+  </main>
+</div><!-- einde .layout -->
+
+
+<!-- ============================================================
+     MODAL: PROMPTDETAILS
+     Toont de volledige prompttekst, gebruikstoelichting, tags
+     en het vertaalpaneel. Geopend via openDetail() in app.js.
+     ============================================================ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-title">Promptdetails</div>
+      <button class="modal-close" onclick="closeModal('detail-modal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Volledige prompttekst (niet afgekapt, monospace) -->
+      <div class="form-group">
+        <div class="form-label">Prompttekst (Nederlands)</div>
+        <div class="prompt-full-text" id="detail-prompt-text"></div>
+      </div>
+
+      <!-- Gebruikstoelichting -->
+      <div class="form-group">
+        <div class="form-label">Gebruik</div>
+        <div id="detail-usage" style="font-size:14px;color:var(--tekst-muted);"></div>
+      </div>
+
+      <!-- Vertaalpaneel: koppelt via translatePrompt() aan de Claude API -->
+      <div class="translate-panel">
+        <div class="translate-header">
+          <div class="translate-title">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-2px;margin-right:4px;">
+              <path d="M5 8l6 6"/>
+              <path d="m4 14 6-6 2-3"/>
+              <path d="M2 5h12"/>
+              <path d="M7 2h1"/>
+              <path d="m22 22-5-10-5 10"/>
+              <path d="M14 18h6"/>
+            </svg>
+            Vertaalmechanisme — via Claude API
+          </div>
+          <!-- Taalkeuze; actieve knop wordt beheerd via setTargetLang() in app.js -->
+          <div class="lang-selector">
+            <button class="lang-btn active" data-lang="en" onclick="setTargetLang('en', this)">EN</button>
+            <button class="lang-btn"        data-lang="de" onclick="setTargetLang('de', this)">DE</button>
+            <button class="lang-btn"        data-lang="fr" onclick="setTargetLang('fr', this)">FR</button>
+            <button class="lang-btn"        data-lang="ar" onclick="setTargetLang('ar', this)">AR</button>
+          </div>
+        </div>
+        <!-- Resultaatvak: gevuld door translatePrompt() -->
+        <div class="translate-output" id="translate-output">
+          <span class="translate-loading">Klik op "Vertaal" om de prompt te vertalen via de Claude API.</span>
+        </div>
+        <div class="translate-actions">
+          <!-- Kopieerknop verborgen totdat er een vertaling beschikbaar is -->
+          <button class="btn btn-secondary" id="btn-copy-translation" style="display:none;" onclick="copyTranslation()">Kopieer vertaling</button>
+          <button class="btn btn-primary" onclick="translatePrompt()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M5 8l6 6"/>
+              <path d="m4 14 6-6 2-3"/>
+              <path d="M2 5h12"/>
+              <path d="M7 2h1"/>
+              <path d="m22 22-5-10-5 10"/>
+              <path d="M14 18h6"/>
+            </svg>
+            Vertaal prompt
+          </button>
+        </div>
+      </div>
+
+      <!-- Categorie- en modeltags + auteursnaam -->
+      <div class="form-group">
+        <div class="card-meta" id="detail-tags"></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="copyPrompt()">Kopieer prompt</button>
+      <button class="btn btn-secondary" onclick="openEditModal()">Bewerken</button>
+      <button class="btn btn-primary"   onclick="closeModal('detail-modal')">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL: NIEUWE / BEWERKEN PROMPT
+     Formulier voor het aanmaken of wijzigen van een prompt.
+     Modus (nieuw vs. bewerken) wordt beheerd via editMode in app.js.
+     ============================================================ -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="new-modal-title">Nieuwe prompt toevoegen</div>
+      <button class="modal-close" onclick="closeModal('new-modal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Verborgen veld: bevat het ID bij bewerken, leeg bij nieuw -->
+      <input type="hidden" id="edit-id" value="">
+
+      <div class="form-group">
+        <label class="form-label" for="form-title">Titel *</label>
+        <input class="form-input" type="text" id="form-title" placeholder="Bijv. Technisch ontwerpdocument opstellen">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="form-category">Categorie *</label>
+        <select class="form-select" id="form-category">
+          <option value="">— Selecteer categorie —</option>
+          <option value="documentatie">Technische documentatie</option>
+          <option value="code">Code review / uitleg</option>
+          <option value="communicatie">Projectcommunicatie</option>
+          <option value="vergadering">Vergaderverslagen</option>
+          <option value="risico">Risicoanalyses &amp; rapportages</option>
+          <option value="beleid">Beleidsnotities</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="form-model">AI-model</label>
+        <select class="form-select" id="form-model">
+          <option value="Beide">Beide modellen</option>
+          <option value="ChatGPT">ChatGPT</option>
+          <option value="Claude">Claude</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="form-prompt">Prompttekst (Nederlands) *</label>
+        <div class="form-sublabel">Schrijf je prompt in het Nederlands. Variabelen zet je tussen [haakjes].</div>
+        <textarea class="form-textarea" id="form-prompt" placeholder="Jij bent een ervaren [functie] bij een Nederlandse gemeente. Schrijf een [documenttype] over [onderwerp]..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="form-usage">Toelichting gebruik</label>
+        <input class="form-input" type="text" id="form-usage" placeholder="Bijv. Gebruik voor interne technische ontwerpdocumenten">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="form-author">Auteur</label>
+        <input class="form-input" type="text" id="form-author" placeholder="Initialen of naam">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('new-modal')">Annuleren</button>
+      <button class="btn btn-primary"   onclick="savePrompt()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     MODAL: INSTELLINGEN
+     Bevat: API-sleutel invoer, export en import van prompts.
+     ============================================================ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Instellingen</div>
+      <button class="modal-close" onclick="closeModal('settings-modal')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-group">
+        <label class="form-label" for="api-key-input">Claude API-sleutel</label>
+        <div class="form-sublabel">Vereist voor het vertaalmechanisme. De sleutel wordt lokaal opgeslagen in deze browser.</div>
+        <!-- type="password" verbergt de invoer; sleutel wordt opgeslagen in localStorage -->
+        <input class="form-input" type="password" id="api-key-input" placeholder="sk-ant-api03-...">
+      </div>
+
+      <!-- Privacytoelichting -->
+      <div style="background:var(--groen-licht);border:1px solid #A7D8BC;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:#145232;">
+        <strong>Privacy:</strong> De API-sleutel wordt alleen opgeslagen in localStorage van deze browser en nooit gedeeld.
+        Prompts die vertaald worden, worden tijdelijk naar de Claude API gestuurd.
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Exporteren</label>
+        <div class="form-sublabel">Download alle prompts als JSON-bestand voor backup of import in andere tools.</div>
+        <button class="btn btn-secondary" onclick="exportPrompts()">Exporteer als JSON</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="import-file">Importeren</label>
+        <div class="form-sublabel">Importeer prompts vanuit een eerder geëxporteerd JSON-bestand.</div>
+        <input type="file" id="import-file" accept=".json" onchange="importPrompts(event)" style="font-size:13px;">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('settings-modal')">Annuleren</button>
+      <button class="btn btn-primary"   onclick="saveSettings()">Instellingen opslaan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Toast-notificatie: tijdelijke melding rechtsonder.
+     Zichtbaarheid en inhoud worden beheerd via showToast() in app.js. -->
+<div class="toast" id="toast"></div>
+
+<!-- Applicatielogica: staat onderaan zodat de volledige DOM beschikbaar is -->
+<script src="app.js"></script>
+
+</body>
+</html>
