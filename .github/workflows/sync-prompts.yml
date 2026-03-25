@@ -14,12 +14,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Clone prompts.chat
-        run: |
-          git clone https://github.com/f/prompts.chat.git external
+        run: git clone https://github.com/f/prompts.chat.git external
 
       - name: Create Python script
         run: |
-          echo 'import json
+          cat > script.py << 'EOF'
+import json
 import os
 
 prompts = []
@@ -52,7 +52,7 @@ os.makedirs("data", exist_ok=True)
 
 with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
     json.dump(prompts, f, indent=2, ensure_ascii=False)
-' > script.py
+EOF
 
       - name: Run script
         run: python3 script.py
