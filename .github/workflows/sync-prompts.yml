@@ -17,11 +17,45 @@ jobs:
         run: |
           git clone https://github.com/f/prompts.chat.git external
 
- - name: Extract prompts naar JSON
+- name: Create Python script
   run: |
-    python3 - <<EOF
-import json
+    echo 'import json
 import os
+
+prompts = []
+
+def extract_title(text, filename):
+    for line in text.split("\n"):
+        if line.startswith("# "):
+            return line.replace("# ", "").strip()
+    return filename.replace(".md", "")
+
+for root, dirs, files in os.walk("external"):
+    for file in files:
+        if file.endswith(".md"):
+            path = os.path.join(root, file)
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    text = f.read()
+
+                    if len(text) > 100:
+                        prompts.append({
+                            "title": extract_title(text, file),
+                            "prompt": text,
+                            "tags": ["external"]
+                        })
+
+            except Exception as e:
+                print(f"Error reading {file}: {e}")
+
+os.makedirs("data", exist_ok=True)
+
+with open("data/prompts-chat.json", "w", encoding="utf-8") as f:
+    json.dump(prompts, f, indent=2, ensure_ascii=False)
+' > script.py
+
+- name: Run script
+  run: python3 script.py
 
 prompts = []
 
