@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PROMPT_LIBRARY }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Clone prompts.chat
         run: git clone https://github.com/f/prompts.chat.git external
@@ -53,4 +53,5 @@ jobs:
           git config user.email "actions@github.com"
           git add data/prompts-chat.json
           git commit -m "update prompts" || echo "no changes"
+          git pull --rebase origin main
           git push
